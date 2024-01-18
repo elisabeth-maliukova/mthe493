@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 def lloydSim(mu, sigma, n, cb_n, eps):
     # Init test data and codebook
     T = np.sort(np.random.normal(mu, sigma, n))
+    print('This is T', T)
+    
 
     cb_1 = np.linspace(-1, 1, cb_n)
-    cb, D, m = llyodRecursive(T, cb_1, eps, 0, 1)
+    cb, D, m = lloydRecursive(T, cb_1, eps, 0, 1)
     return cb, D, m
 
-def llyodRecursive(T, cb_m, eps, D_last, m):
+def lloydRecursive(T, cb_m, eps, D_last, m):
     # Partition using NNC
     cb_m = np.sort(cb_m)
     R = [[] for _ in range(len(cb_m))]
@@ -49,7 +51,7 @@ def llyodRecursive(T, cb_m, eps, D_last, m):
     m += 1
 
     if (D - D_last) / D >= eps:
-        cb, D, m = llyodRecursive(T, cb, eps, D, m)
+        cb, D, m = lloydRecursive(T, cb, eps, D, m)
 
     return cb, D, m
 
@@ -80,4 +82,4 @@ print('Optimal Codebooks:')
 for i in range(len(X)):
     print(f'n={X[i]}:', cb1 if i == 0 else (cb2 if i == 1 else (cb4 if i == 2 else cb8)))
     
-plt.show();
+plt.show()
