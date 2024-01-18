@@ -74,9 +74,10 @@ plt.plot(X, Y)
 plt.xlabel('Codebook Size (n)')
 plt.ylabel('Average Distortion')
 plt.title('Distortion for n-length Codebook')
-plt.show()
 
 # Output optimal codebooks
 print('Optimal Codebooks:')
 for i in range(len(X)):
     print(f'n={X[i]}:', cb1 if i == 0 else (cb2 if i == 1 else (cb4 if i == 2 else cb8)))
+    
+plt.show();
