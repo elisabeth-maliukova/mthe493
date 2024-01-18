@@ -1,59 +1,58 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def lloydSim(mu, sigma, n, cb_n, eps):
-    # Init test data and codebook
-    T = np.sort(np.random.normal(mu, sigma, n))
-    print('This is T', T)
-    
+def lloydSim(mu, sigma, n, num_quantizers, eps):
+  # Init test data and codebook
+  source_samples = np.sort(np.random.normal(mu, sigma, n))
 
-    cb_1 = np.linspace(-1, 1, cb_n)
-    cb, D, m = lloydRecursive(T, cb_1, eps, 0, 1)
-    return cb, D, m
+  default_codebook = np.linspace(-1, 1, num_quantizers)
+  cb, D, count = lloydRecursive(source_samples, default_codebook, eps, 0, 1)
+  return cb, D, count
 
-def lloydRecursive(T, cb_m, eps, D_last, m):
-    # Partition using NNC
-    cb_m = np.sort(cb_m)
-    R = [[] for _ in range(len(cb_m))]
-    i = 0
+def lloydRecursive(source_samples, current_codebook, eps, D_last, count):
+  # Partition using NNC
+  current_codebook = np.sort(current_codebook)
+  bins = [[] for _ in range(len(current_codebook))]
+  i = 0
 
-    for d in range(len(T)):
-        while True:
-            if i == len(cb_m) - 1:
-                R[i].append(T[d])
-                break
-            if abs(cb_m[i] - T[d]) < abs(cb_m[i + 1] - T[d]):
-                R[i].append(T[d])
-                break
-            else:
-                i += 1
+  for j in range(len(source_samples)):
+    while True:
+      if i == len(current_codebook) - 1:
+        bins[i].append(source_samples[j])
+        break
+      if abs(current_codebook[i] - source_samples[j]) < abs(current_codebook[i + 1] - source_samples[j]):
+        bins[i].append(source_samples[j])
+        break
+      else:
+          i += 1
 
-    # If the first loop, calculate initial codebook distortion for D_last
-    if m == 1:
-        D_last = 0
-        for i in range(len(cb_m)):
-            D_last += sum(R[i])
-        D_last /= len(T)
+  # If the first loop, calculate initial codebook distortion for D_last
+  if count == 1:
+    D_last = 0
+    for i in range(len(current_codebook)):
+        D_last += sum(bins[i])
+    D_last /= len(source_samples)
 
-    # Find optimal codebook using partition R and CC
-    cb = np.zeros(len(cb_m))
-    for i in range(len(cb_m)):
-        cb[i] = np.mean(R[i])
+  # Find optimal codebook using partition R and CC
+  new_codebook = np.zeros(len(current_codebook))
+  for i in range(len(current_codebook)):
+    new_codebook[i] = np.mean(bins[i])
 
-    # Check if change in distortion < eps (Optimal Codebook Found)
-    D = 0
-    for i in range(len(cb)):
-        for d in range(len(R[i])):
-            D += np.square(cb[i] - R[i][d])
+  # Check if change in distortion < eps (Optimal Codebook Found)
+  D = 0
+  for i in range(len(new_codebook)):
+    for j in range(len(bins[i])):
+      bin_value = bins[i][j]
+      D += np.square(new_codebook[i] - bin_value)
 
-    D /= len(T)
+  D /= len(source_samples)
 
-    m += 1
+  count += 1
 
-    if (D - D_last) / D >= eps:
-        cb, D, m = lloydRecursive(T, cb, eps, D, m)
+  if (D - D_last) / D >= eps:
+    new_codebook, D, count = lloydRecursive(source_samples, new_codebook, eps, D, count)
 
-    return cb, D, m
+  return new_codebook, D, count
 
 # Parameters
 n = 5000
@@ -80,6 +79,6 @@ plt.title('Distortion for n-length Codebook')
 # Output optimal codebooks
 print('Optimal Codebooks:')
 for i in range(len(X)):
-    print(f'n={X[i]}:', cb1 if i == 0 else (cb2 if i == 1 else (cb4 if i == 2 else cb8)))
+  print(f'n={X[i]}:', cb1 if i == 0 else (cb2 if i == 1 else (cb4 if i == 2 else cb8)))
     
 plt.show()
