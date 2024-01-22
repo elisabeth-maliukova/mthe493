@@ -45,7 +45,34 @@ def bin_assignment_with_channel_noise(samples, centroids):
     bin_dictionary[index].append(sample)
   return bin_dictionary
 
+# Function that re calculates the centroids by using a weighted average
+# using the transition probabilities
+def new_centroids_with_channel_noise(bins):
+  new_centroids = {}
+  for i in range(transition_matrix.shape[0]):
+    numerator = 0
+    denominator = 0
+    for j in range(transition_matrix.shape[1]):
+      numerator += transition_matrix[i,j] * np.array(bins[j]).sum
+      denominator += transition_matrix[i,j] * len(bins[j])
+    new_centroids[i] = numerator / denominator
+  return new_centroids
 
+def general_lloyds_algorithm(source_samples, centroids, distortion_list):
+  previous_centroids = centroids
+  bin_dictionary = bin_assignment_with_channel_noise(source_samples, centroids)
+  
+  new_centroids = new_centroids_with_channel_noise(bin_dictionary)
+  new_bin_dictionary = bin_assignment_with_channel_noise(source_samples, new_centroids)
+  
+  previous_distortion = distortion_with_channel_noise(bin_dictionary, previous_centroids)
+  new_distortion = distortion_with_channel_noise(new_bin_dictionary, new_centroids)
+  
+  if abs(new_distortion - previous_distortion) / previous_distortion > eps:
+    distortion_list.append(previous_distortion / n)
+    return general_lloyds_algorithm(source_samples, new_centroids, distortion_list)
+  else:
+    return distortion_list, new_centroids
 
 
 
