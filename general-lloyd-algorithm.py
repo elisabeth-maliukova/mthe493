@@ -25,6 +25,7 @@ def calc_distortion_for_all_bins(bins, centroids):
       distortion += transition_matrix[i][j] * calc_distortion_for_bin(bins[i], centroids[j])
   return distortion / num_samples
 
+# Function that assigns each sample to a bin using the Nearest Neighbor Condition
 def assign_samples_to_bins(samples, centroids):
   bins = []
   for i in range(0, N):
@@ -44,7 +45,7 @@ def assign_samples_to_bins(samples, centroids):
     
   return bins
 
-# Function that re calculates the centroids based on the current bins and the transition matrix
+# Function that re calculates the centroids based on the current bins and the transition matrix using the Centroid Condition
 def calculate_centroids(bins):
   centroids = []
   for i in range(N):
