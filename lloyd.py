@@ -20,17 +20,19 @@ def lloydRecursive(source_samples, current_codebook, eps, D_last, count):
       if i == len(current_codebook) - 1:
         bins[i].append(source_samples[j])
         break
-      if abs(current_codebook[i] - source_samples[j]) < abs(current_codebook[i + 1] - source_samples[j]):
+      if np.square(current_codebook[i] - source_samples[j]) < np.square(current_codebook[i + 1] - source_samples[j]):
         bins[i].append(source_samples[j])
         break
       else:
-          i += 1
+        i += 1
 
   # If the first loop, calculate initial codebook distortion for D_last
   if count == 1:
     D_last = 0
     for i in range(len(current_codebook)):
-        D_last += sum(bins[i])
+      for j in range(len(bins[i])):
+        bin_value = bins[i][j]
+        D_last += np.square(current_codebook[i] - bin_value)
     D_last /= len(source_samples)
 
   # Find optimal codebook using partition R and CC
