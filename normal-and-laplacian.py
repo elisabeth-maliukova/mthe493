@@ -19,7 +19,7 @@ def plot_normal_samples(rate, channel_error_probability):
   plt.figure()
   plt.plot(indexes, distortion)
   plt.xlabel('Codebook Size (n)')
-  plt.ylabel('Average Distortion')
+  plt.ylabel('Iteration')
   plt.title('Distortion for n-length Codebook (Normal)')
   plt.show()
   
@@ -38,7 +38,7 @@ def plot_laplacian_samples(rate, channel_error_probability):
   plt.figure()
   plt.plot(indexes, distortion)
   plt.xlabel('Codebook Size (n)')
-  plt.ylabel('Average Distortion')
+  plt.ylabel('Iteration')
   plt.title('Distortion for n-length Codebook (Laplacian)')
   plt.show()
   

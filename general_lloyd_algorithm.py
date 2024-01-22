@@ -94,7 +94,7 @@ def main():
   
   plt.figure()
   plt.plot(indexes, distortion)
-  plt.xlabel('Codebook Size (n)')
+  plt.xlabel('Iteration')
   plt.ylabel('Average Distortion')
   plt.title('Distortion for n-length Codebook')
   plt.show()
