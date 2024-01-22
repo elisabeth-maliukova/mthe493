@@ -84,11 +84,11 @@ def main():
   mu = 0
   sigma = 1
   epsilon = 0.01
-  num_samples = 5000
-  channel_error_probability = 0
-  source_samples = np.random.normal(mu, sigma, num_samples)
-  codebook_length = 3
-  [centroids, bins, distortion] = general_lloyds_algorithm(source_samples, num_samples, channel_error_probability, epsilon, codebook_length)
+  num_samples = 10**3
+  channel_error_probability = 0.2
+  normal_source_samples = np.random.normal(mu, sigma, num_samples)
+  codebook_length = 8
+  [centroids, bins, distortion] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, epsilon, codebook_length)
   indexes = range(len(distortion))
   
   
