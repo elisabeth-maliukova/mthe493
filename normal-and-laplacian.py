@@ -1,9 +1,8 @@
 from general_lloyd_algorithm import general_lloyds_algorithm
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
-
-  
 def plot_normal_samples(rate, channel_error_probability):
   mu = 0
   sigma = 1
@@ -25,15 +24,14 @@ def plot_normal_samples(rate, channel_error_probability):
       [centroids, bins, distortion[j]] = general_lloyds_algorithm(normal_source_samples, num_samples, error, epsilon, codebook_length[j])
     plt.plot(codebook_length, distortion)
   plt.legend([str(channel_error_probability[0]),str(channel_error_probability[1]),str(channel_error_probability[2]),str(channel_error_probability[3])])
-  plt.show()
   
 def plot_laplacian_samples(rate, channel_error_probability):
-  mu = 0
-  sigma = 1
+  mean = 0
+  scale = 1 / math.sqrt(2)
   epsilon = 0.01
   num_samples = 10**3
   
-  laplacian_source_samples = np.random.laplace(mu, sigma, num_samples)
+  laplacian_source_samples = np.random.laplace(mean, scale, num_samples)
   
   codebook_length = []
   distortion = []
@@ -49,12 +47,13 @@ def plot_laplacian_samples(rate, channel_error_probability):
       [centroids, bins, distortion[j]] = general_lloyds_algorithm(laplacian_source_samples, num_samples, error, epsilon, codebook_length[j])
     plt.plot(codebook_length, distortion)
   plt.legend([str(channel_error_probability[0]),str(channel_error_probability[1]),str(channel_error_probability[2]),str(channel_error_probability[3])])
-  plt.show()
   
   
 def main():
+  plt.close('all')
   plot_normal_samples(4, [0, 0.01, 0.1, 0.5])
   plot_laplacian_samples(4, [0, 0.01, 0.1, 0.5])
+  plt.show()
   
 if __name__ == "__main__":
   main()
