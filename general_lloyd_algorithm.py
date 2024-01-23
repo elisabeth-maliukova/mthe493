@@ -56,8 +56,8 @@ def calculate_centroids(bins, codebook_length, channel_error_probability, num_sa
     numerator = 0
     denominator = 0
     for i in range(codebook_length):
-      numerator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (sum(bins[i]) / num_samples)
-      denominator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (len(bins[i]) / num_samples)
+      numerator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (sum(bins[i]))
+      denominator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (len(bins[i]))
     centroids[j] = numerator / denominator
   return centroids
 
