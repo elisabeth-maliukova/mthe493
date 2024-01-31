@@ -1,5 +1,5 @@
 import numpy as np
-from general_lloyd_algorithm import general_lloyds_algorithm, calc_distortion_for_all_bins
+from general_lloyd_algorithm import general_lloyds_algorithm
 import matplotlib.pyplot as plt
 
 def simulate_bsc(original_bins, num_centroids, epsilon):
@@ -33,7 +33,16 @@ def simulate_bsc(original_bins, num_centroids, epsilon):
       new_bins[bin_number].append(sample)
 
   return new_bins
+
+def calc_distortion_between_bin_and_transmitted_sample(new_bins, centroids, codebook_length, num_samples):
+  distortion = 0
+  
+  for i in range(codebook_length):
+    for sample in new_bins[i]:
+      distortion += (sample - centroids[i])**2
       
+  return distortion / num_samples
+
 
 def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channel_error_probabilities, num_samples):
   mu = 0
@@ -59,11 +68,14 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
       print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
       
       new_bins[i] = simulate_bsc(bins[i], len(centroids[i]), channel_error_probability)
-      new_distortions[i] = calc_distortion_for_all_bins(new_bins[i], centroids[i], codebook_lengths[i], num_samples, channel_error_probability)
+      new_distortions[i] = calc_distortion_between_bin_and_transmitted_sample(new_bins[i], centroids[i], codebook_lengths[i], num_samples)
       print('NEW DISTORTION: ', 'codebook length=', codebook_lengths[i], 'new distortions=', new_distortions, 'channel error prob=', channel_error_probability)
       
+    # *****UNCOMMENT BELOW LINE TO ADD THE GRAPHS OF THE DISTORTIONS BEFORE TRANSMISSION*****
     # plt.plot(codebook_lengths, distortions)
+    
     plt.plot(codebook_lengths, new_distortions)
+    
   plt.legend([str(channel_error_probabilities[0]),str(channel_error_probabilities[1]),str(channel_error_probabilities[2]),str(channel_error_probabilities[3])])
   
   plt.show()
