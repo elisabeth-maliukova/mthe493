@@ -35,55 +35,46 @@ def simulate_bsc(original_bins, num_centroids, epsilon):
   return new_bins
       
 
-def run_lloyds_with_normal_samples(codebook_lengths, channel_error_probability, num_samples):
+def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channel_error_probabilities, num_samples):
   mu = 0
   sigma = 1
   epsilon = 0.01
   
   normal_source_samples = np.random.normal(mu, sigma, num_samples)
-  channel_error_probability = 0.1
-  [centroids, bins, distortion] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, epsilon, codebook_lengths)
-  # codebook_length = []
-  # distortion = []
-  # centroids = []
-  # bins = []
-  # for i in range(rate):
-  #   codebook_length.append(2**i)
-  #   distortion.append(0)
-  #   centroids.append(0)
-  #   bins.append(0)
-  # plt.figure()
-  # plt.xlabel('Codebook Size (n)')
-  # plt.ylabel('Distortion')
-  # plt.title('Distortion for n-length Codebook (Normal)')
-  # for error in channel_error_probability:
-  #   for j in range(rate):
-  #     [centroids[j], bins[j], distortion[j]] = general_lloyds_algorithm(normal_source_samples, num_samples, error, epsilon, codebook_length[j])
-    # plt.plot(codebook_length, distortion)
-  # plt.legend([str(channel_error_probability[0]),str(channel_error_probability[1]),str(channel_error_probability[2]),str(channel_error_probability[3])])
-  return [normal_source_samples, centroids, bins, distortion]
-
-def plot_distortions(codebook_lengths, new_distortion):
+  
+  distortions = [0] * len(codebook_lengths)
+  centroids = [0] * len(codebook_lengths)
+  bins = [0] * len(codebook_lengths)
+  
   plt.figure()
   plt.xlabel('Codebook Size (n)')
   plt.ylabel('Distortion')
-  plt.title('Distortion for n-length Codebook after Transmission')
-  plt.plot(codebook_lengths, new_distortion)
+  plt.title('Distortion for n-length Codebook (Normal)')
+  
+  new_bins = [0] * len(codebook_lengths)
+  new_distortions = [0] * len(codebook_lengths)
+  for channel_error_probability in channel_error_probabilities:
+    for i in range(len(codebook_lengths)):
+      [centroids[i], bins[i], distortions[i]] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, epsilon, codebook_lengths[i])
+      print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
+      
+      new_bins[i] = simulate_bsc(bins[i], len(centroids[i]), channel_error_probability)
+      new_distortions[i] = calc_distortion_for_all_bins(new_bins[i], centroids[i], codebook_lengths[i], num_samples, channel_error_probability)
+      print('NEW DISTORTION: ', 'codebook length=', codebook_lengths[i], 'new distortions=', new_distortions, 'channel error prob=', channel_error_probability)
+      
+    # plt.plot(codebook_lengths, distortions)
+    plt.plot(codebook_lengths, new_distortions)
+  plt.legend([str(channel_error_probabilities[0]),str(channel_error_probabilities[1]),str(channel_error_probabilities[2]),str(channel_error_probabilities[3])])
+  
   plt.show()
+  
+  return centroids, bins, distortions
 
 def main():
-  channel_error_probability = [0, 0.01, 0.1, 0.5]
-  codebook_lengths = 2**2
-  num_samples = 100
-  normal_source_samples, centroids, original_bins, distortion = run_lloyds_with_normal_samples(codebook_lengths, channel_error_probability, num_samples)
-
-  epsilon = 0.1  # Example flipping probability
-  new_bins = simulate_bsc(original_bins, len(centroids), epsilon)
-  
-  new_distortion = calc_distortion_for_all_bins(new_bins, centroids, codebook_lengths, num_samples, epsilon)
-  
-  plot_distortions(codebook_lengths, new_distortion)
-
+  channel_error_probabilities = [0, 0.01, 0.1, 0.5]
+  codebook_lengths = [1, 2, 4, 8]
+  num_samples = 1000
+  run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channel_error_probabilities, num_samples)
 
 if __name__ == "__main__":
   main()
