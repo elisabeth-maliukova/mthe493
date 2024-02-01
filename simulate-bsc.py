@@ -35,7 +35,7 @@ def simulate_bsc(original_bins, centroids, epsilon):
 
   return sample_to_centroid_map
 
-def calc_distortion_between_centroid_and_transmitted_sample(sample_to_centroid_map, num_samples):
+def calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map, num_samples):
   distortion = 0
   
   for (sample, centroid) in sample_to_centroid_map:
@@ -73,7 +73,7 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
       # print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
       
       sample_to_centroid_map[i] = simulate_bsc(bins[i], centroids[i], channel_error_probability)
-      new_distortions[i] = calc_distortion_between_centroid_and_transmitted_sample(sample_to_centroid_map[i], num_samples)
+      new_distortions[i] = calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map[i], num_samples)
       # print('NEW DISTORTION: ', 'codebook length=', codebook_lengths[i], 'new distortions=', new_distortions, 'channel error prob=', channel_error_probability)
       
     ax1.plot(codebook_lengths, distortions)
@@ -85,7 +85,7 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
 def main():
   channel_error_probabilities = [0, 0.01, 0.1, 0.5]
   codebook_lengths = [1, 2, 4, 8]
-  num_samples = 100
+  num_samples = 1000
   run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channel_error_probabilities, num_samples)
 
 if __name__ == "__main__":
