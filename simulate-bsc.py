@@ -7,12 +7,6 @@ def simulate_bsc(original_bins, centroids, epsilon):
 
   # Calculate the number of bits needed to represent the centroids
   num_bits = int(np.ceil(np.log2(num_centroids)))
-  
-  num_bits = 0
-  if int(np.ceil(np.log2(num_centroids))) == 0:
-    num_bits = 1
-  else:
-    num_bits = int(np.ceil(np.log2(num_centroids)))
 
   # Generate the binary strings for each centroid
   binary_strings = [format(i, f'0{num_bits}b') for i in range(num_centroids)]
@@ -91,7 +85,7 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
 def main():
   channel_error_probabilities = [0, 0.01, 0.1, 0.5]
   codebook_lengths = [1, 2, 4, 8]
-  num_samples = 1000
+  num_samples = 100
   run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channel_error_probabilities, num_samples)
 
 if __name__ == "__main__":
