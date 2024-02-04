@@ -2,6 +2,8 @@ import numpy as np
 from general_lloyd_algorithm import general_lloyds_algorithm
 import matplotlib.pyplot as plt
 
+INVALID_CENTROID = -999999
+
 def simulate_bsc(original_bins, centroids, epsilon):
   num_centroids = len(centroids)
 
@@ -19,7 +21,7 @@ def simulate_bsc(original_bins, centroids, epsilon):
 
   # Simulate the BSC by flipping each bit with probability epsilon
   distorted_pairs = []
-  for sample, encoding in sample_encoding_pairs:
+  for sample, encoding in sample_encoding_pairs:  
     distorted_encoding = ''.join(['1' if (bit == '0' and np.random.rand() < epsilon) 
                                   else '0' if (bit == '1' and np.random.rand() < epsilon) 
                                   else bit for bit in encoding])
@@ -32,14 +34,21 @@ def simulate_bsc(original_bins, centroids, epsilon):
     if bin_number is not None:
       # Associate the sample with the centroid of the bin it has been placed into
       sample_to_centroid_map.append((sample, centroids[bin_number]))
+    else:
+      # Record that the sample got mapped to an invalid centroid during transmission over channel
+      sample_to_centroid_map.append((0, INVALID_CENTROID))
 
   return sample_to_centroid_map
 
-def calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map, num_samples):
+def calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map, num_samples, sigma):
   distortion = 0
   
   for (sample, centroid) in sample_to_centroid_map:
-    distortion += (sample - centroid)**2
+    if (sample == 0) and (centroid == INVALID_CENTROID):
+      # if sample got lost during transmission use varience of the source as distortion
+      distortion += sigma
+    else:
+      distortion += (sample - centroid)**2
       
   return distortion / num_samples
 
@@ -73,7 +82,7 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
       # print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
       
       sample_to_centroid_map[i] = simulate_bsc(bins[i], centroids[i], channel_error_probability)
-      new_distortions[i] = calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map[i], num_samples)
+      new_distortions[i] = calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map[i], num_samples, sigma)
       # print('NEW DISTORTION: ', 'codebook length=', codebook_lengths[i], 'new distortions=', new_distortions, 'channel error prob=', channel_error_probability)
       
     ax1.plot(codebook_lengths, distortions)
