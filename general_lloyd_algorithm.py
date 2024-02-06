@@ -59,6 +59,9 @@ def calculate_centroids(bins, codebook_length, channel_error_probability, num_sa
       numerator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (sum(bins[i]))
       denominator += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (len(bins[i]))
     centroids[j] = numerator / denominator
+    #added so that if the denominator == 0, the centroid isn't NAN
+    if denominator==0:
+      centroids[j] = 0    
   return centroids
 
 def general_lloyds_algorithm(samples, num_samples, channel_error_probability, epsilon, codebook_length):
@@ -73,8 +76,8 @@ def general_lloyds_algorithm(samples, num_samples, channel_error_probability, ep
     i += 1
     bins = assign_samples_to_bins(samples, centroids, codebook_length, channel_error_probability)
     centroids = calculate_centroids(bins, codebook_length, channel_error_probability, num_samples)
-    
     distortion.append(calc_distortion_for_all_bins(bins, centroids, codebook_length, num_samples, channel_error_probability))
+    print(centroids, distortion)
     if abs(distortion[i] - distortion[i-1]) / distortion[i-1] < epsilon:
       break
   #returning the last distortion value (final iterated distortion)
