@@ -64,7 +64,7 @@ def calculate_centroids(bins, codebook_length, channel_error_probability, num_sa
       centroids[j] = 0    
   return centroids
 
-def general_lloyds_algorithm(samples, num_samples, channel_error_probability, epsilon, codebook_length):
+def general_lloyds_algorithm(samples, num_samples, channel_error_probability, codebook_length):
   distortion = []
   centroids = np.linspace(-1, 1, codebook_length)
   
@@ -77,8 +77,8 @@ def general_lloyds_algorithm(samples, num_samples, channel_error_probability, ep
     bins = assign_samples_to_bins(samples, centroids, codebook_length, channel_error_probability)
     centroids = calculate_centroids(bins, codebook_length, channel_error_probability, num_samples)
     distortion.append(calc_distortion_for_all_bins(bins, centroids, codebook_length, num_samples, channel_error_probability))
-    print(centroids, distortion)
-    if abs(distortion[i] - distortion[i-1]) / distortion[i-1] < epsilon:
+    print(distortion)
+    if abs(distortion[i] - distortion[i-1]) / distortion[i-1] <= channel_error_probability:
       break
   #returning the last distortion value (final iterated distortion)
   return [centroids, bins, distortion[-1]]

@@ -21,7 +21,7 @@ def plot_normal_samples(rate, channel_error_probability):
   plt.title('Distortion for n-length Codebook (Normal)')
   for error in channel_error_probability:
     for j in range(rate):
-      [centroids, bins, distortion[j]] = general_lloyds_algorithm(normal_source_samples, num_samples, error, epsilon, codebook_length[j])
+      [centroids, bins, distortion[j]] = general_lloyds_algorithm(normal_source_samples, num_samples, error, codebook_length[j])
     plt.plot(codebook_length, distortion)
   plt.legend([str(channel_error_probability[0]),str(channel_error_probability[1]),str(channel_error_probability[2]),str(channel_error_probability[3])])
   
