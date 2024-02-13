@@ -40,6 +40,7 @@ def DCT_transform_image(partitioned_image):
   # Create 8x8x(num_blocks) array
   DCT_transform = np.array([[[0] * num_blocks] * 8 for _ in range(8)], dtype=np.float32)
   
+  # Perform DCT transform on each block
   for k in range(num_blocks):
     dct_block = dct(dct(np.array(partitioned_image[k], dtype=np.float32).T, norm='ortho').T, norm='ortho')
     for i in range(8):
@@ -56,9 +57,9 @@ def get_DCT_variences(DCT_transform):
   DCT_variences[0][0] = np.var(DCT_transform[0][0])
 
   # Calculate Varience (Scale paramater for Laplace Source) of AC Coefficients
-  for i in range(7):
-    for j in range(7):
-      scale_param = np.median(np.abs(DCT_transform[i + 1][j + 1] - np.median(DCT_transform[i + 1][j + 1]))) / 0.6745
+  for i in range(1, 8):
+    for j in range(1, 8):
+      scale_param = np.median(np.abs(DCT_transform[i][j] - np.median(DCT_transform[i][j]))) / 0.6745
       DCT_variences[i][j] = scale_param 
 
   return DCT_variences     
@@ -77,15 +78,13 @@ def main():
   DCT_variences = get_DCT_variences(DCT_transform)
   
   # Next Steps --Train laplace and normal quantizers for rates 1-8 (mean 0 and var 1)
-  #            --Determine Bit Allocation using Tables in Julians thesis
+  #            --Determine Bit Allocation for each block using Tables in Julians thesis
   #            --Quantize each block using standard quantizers (adjust using DCT variences)
   #            --Send over Channel
   #            --Decode Quantizer (adjust using DCT variences)
   #            --Perform inverse DCT transformation
   #            --add 128 to each pixel value to reverse translation to zero mean source
   #            --rebuild image from blocks
-
-
 
 if __name__ == "__main__":
   main()
