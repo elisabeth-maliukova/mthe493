@@ -36,15 +36,33 @@ def partition_image(translated_image):
 # performs DCT transformation on image
 def DCT_transform_image(partitioned_image):
   num_blocks = len(partitioned_image)
+
+  # Create 8x8x(num_blocks) array
   DCT_transform = np.array([[[0] * num_blocks] * 8 for _ in range(8)], dtype=np.float32)
   
   for k in range(num_blocks):
-    dct_block = np.array(partitioned_image[k], dtype=np.float32) 
+    dct_block = dct(dct(np.array(partitioned_image[k], dtype=np.float32).T, norm='ortho').T, norm='ortho')
     for i in range(8):
       for j in range(8):
         DCT_transform[i][j][k] = dct_block[i][j]
 
   return DCT_transform
+
+# Determine variences of DCT Coefficients
+def get_DCT_variences(DCT_transform):
+  DCT_variences = [[0] * 8 for _ in range(8)]
+  
+  # Calculate Varience of DC Coefficients
+  DCT_variences[0][0] = np.var(DCT_transform[0][0])
+
+  # Calculate Varience (Scale paramater for Laplace Source) of AC Coefficients
+  for i in range(7):
+    for j in range(7):
+      scale_param = np.median(np.abs(DCT_transform[i + 1][j + 1] - np.median(DCT_transform[i + 1][j + 1]))) / 0.6745
+      DCT_variences[i][j] = scale_param 
+
+  print(DCT_variences)
+  return DCT_variences     
 
 def main():
   channel_error_probability = 0.5
@@ -54,9 +72,10 @@ def main():
   for image in images:
     training_images.append(cv2.resize(cv2.imread(str(dir+"/"+image.name), cv2.IMREAD_GRAYSCALE),(256, 256)))
 
-  translated_image = translate_image(training_images[0])
+  translated_image = translate_image(training_images[1])
   partitioned_image = partition_image(translated_image)
   DCT_transform = DCT_transform_image(partitioned_image)
+  DCT_variences = get_DCT_variences(DCT_transform)
 
 if __name__ == "__main__":
   main()
