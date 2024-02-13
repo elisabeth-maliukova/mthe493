@@ -8,16 +8,6 @@ import math
 from scipy.fftpack import dct, idct
 INVALID_CENTROID = -999999
 
-
-#trains the quantizer
-def train_quantizer(training_images, codebook_length, channel_error_probabilities):
-  training_samples = np.concatenate([image.flatten() for image in training_images])
-  num_samples = len(training_samples)
-    
-  centroids, bins, _ = general_lloyds_algorithm(training_samples, num_samples, channel_error_probabilities, codebook_length)
-  
-  return centroids, bins
-
 # Shifts image pixel values to obtain a zero mean source
 def translate_image(test_image):
   mean_adjusted_image = [ [0] * len(test_image[0]) for _ in range(len(test_image))]
@@ -66,7 +56,7 @@ def main():
 
   translated_image = translate_image(training_images[0])
   partitioned_image = partition_image(translated_image)
-  DCT_transform_image(partitioned_image)
+  DCT_transform = DCT_transform_image(partitioned_image)
 
 if __name__ == "__main__":
   main()
