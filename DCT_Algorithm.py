@@ -61,7 +61,6 @@ def get_DCT_variences(DCT_transform):
       scale_param = np.median(np.abs(DCT_transform[i + 1][j + 1] - np.median(DCT_transform[i + 1][j + 1]))) / 0.6745
       DCT_variences[i][j] = scale_param 
 
-  print(DCT_variences)
   return DCT_variences     
 
 def main():
@@ -76,6 +75,17 @@ def main():
   partitioned_image = partition_image(translated_image)
   DCT_transform = DCT_transform_image(partitioned_image)
   DCT_variences = get_DCT_variences(DCT_transform)
+  
+  # Next Steps --Train laplace and normal quantizers for rates 1-8 (mean 0 and var 1)
+  #            --Determine Bit Allocation using Tables in Julians thesis
+  #            --Quantize each block using standard quantizers (adjust using DCT variences)
+  #            --Send over Channel
+  #            --Decode Quantizer (adjust using DCT variences)
+  #            --Perform inverse DCT transformation
+  #            --add 128 to each pixel value to reverse translation to zero mean source
+  #            --rebuild image from blocks
+
+
 
 if __name__ == "__main__":
   main()
