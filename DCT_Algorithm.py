@@ -36,18 +36,18 @@ def partition_image(translated_image):
   return partitioned_image
 
 
-## We need to figure out hwo to do this properly
+# Rebuild image from partitioned blocks
 def reconstruct_image(inverse_DCT_transform):
   reconstructed_image = []
-  for y in range(32):
-    for x in range(32):
-      temp = []
-      for i in range(8):
-        temp.append(inverse_DCT_transform[y][i][x])
-    reconstructed_image.append(temp)
 
+  for y in range(32):
+    for i in range(8):
+      for x in range(32):
+        for j in range(8):
+          reconstructed_image.append(inverse_DCT_transform[i][j][x + 32 * y])
+
+  reconstructed_image = np.array(reconstructed_image).reshape((256,256))
   return reconstructed_image
-  
 
 # performs DCT transformation on image
 def DCT_transform_image(partitioned_image):
@@ -111,7 +111,7 @@ def main():
   for image in images:
     training_images.append(cv2.resize(cv2.imread(str(dir+"/"+image.name), cv2.IMREAD_GRAYSCALE),(256, 256)))
 
-  translated_image = translate_image(training_images[1], -128)
+  translated_image = translate_image(training_images[0], -128)
   partitioned_image = partition_image(translated_image)
   DCT_transform = DCT_transform_image(partitioned_image)
   DCT_variances = get_DCT_variances(DCT_transform)
@@ -123,9 +123,14 @@ def main():
   final_image = translate_image(reconstructed_image, 128)
   
   plt.figure(figsize=(10, 5))
+  plt.subplot(1, 2, 1)
+  plt.imshow(training_images[0], cmap='gray')
+  plt.title('Original Image')
+
   plt.subplot(1, 2, 2)
   plt.imshow(final_image, cmap='gray')
-  plt.title('Reconstructed Image')  
+  plt.title('Reconstructed Image')
+
   plt.show()
   
   
