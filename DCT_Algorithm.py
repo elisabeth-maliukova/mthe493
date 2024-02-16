@@ -9,11 +9,13 @@ from scipy.fftpack import dct, idct
 INVALID_CENTROID = -999999
 
 # Shifts image pixel values to obtain a zero mean source
-def translate_image(test_image):
+def translate_image(test_image, shift):
   mean_adjusted_image = [ [0] * len(test_image[0]) for _ in range(len(test_image))]
   for i in range(len(test_image)):
     for j in range(len(test_image[0])):
-      mean_adjusted_image[i][j] = test_image[i][j] - 128
+      mean_adjusted_image[i][j] = test_image[i][j] + shift
+      if mean_adjusted_image[i][j] > 256:
+        mean_adjusted_image[i][j] = 256 # If pixel translation is higher than 256, then bound it by 256
   return mean_adjusted_image
 
 # Partions image into 8 by 8 squares to prepare for DCT 
@@ -33,6 +35,20 @@ def partition_image(translated_image):
   
   return partitioned_image
 
+
+## We need to figure out hwo to do this properly
+def reconstruct_image(inverse_DCT_transform):
+  reconstructed_image = []
+  for y in range(32):
+    for x in range(32):
+      temp = []
+      for i in range(8):
+        temp.append(inverse_DCT_transform[y][i][x])
+    reconstructed_image.append(temp)
+
+  return reconstructed_image
+  
+
 # performs DCT transformation on image
 def DCT_transform_image(partitioned_image):
   num_blocks = len(partitioned_image)
@@ -48,6 +64,19 @@ def DCT_transform_image(partitioned_image):
         DCT_transform[i][j][k] = dct_block[i][j]
 
   return DCT_transform
+
+def inverse_DCT_transform_image(DCT_transform):
+  num_blocks = len(DCT_transform[0][0])
+  inverse_DCT_transform = np.array([[[0] * num_blocks] * 8 for _ in range(8)], dtype=np.float32)
+
+  for k in range(num_blocks):
+    dct_block = DCT_transform[:, :, k]
+    inverse_dct_block = idct(idct(dct_block, axis=0, norm='ortho'), axis=1, norm='ortho')
+    for i in range(8):
+      for j in range(8):
+        inverse_DCT_transform[i][j][k] = inverse_dct_block[i][j] 
+        
+  return inverse_DCT_transform
 
 # Determine variances of DCT Coefficients
 def get_DCT_variances(DCT_transform):
@@ -82,25 +111,40 @@ def main():
   for image in images:
     training_images.append(cv2.resize(cv2.imread(str(dir+"/"+image.name), cv2.IMREAD_GRAYSCALE),(256, 256)))
 
-  translated_image = translate_image(training_images[1])
+  translated_image = translate_image(training_images[1], -128)
   partitioned_image = partition_image(translated_image)
   DCT_transform = DCT_transform_image(partitioned_image)
   DCT_variances = get_DCT_variances(DCT_transform)
   
+  inverse_DCT_transform = inverse_DCT_transform_image(DCT_transform)
+  
+  reconstructed_image = reconstruct_image(inverse_DCT_transform)
+  
+  final_image = translate_image(reconstructed_image, 128)
+  
+  plt.figure(figsize=(10, 5))
+  plt.subplot(1, 2, 2)
+  plt.imshow(final_image, cmap='gray')
+  plt.title('Reconstructed Image')  
+  plt.show()
+  
+  
+  # reconstructed_image - translate_image()
+  
   # print(DCT_variances)
-  num_samples = 10**3
+  # num_samples = 10**3
   
-  mu = 0
-  sigma = 1
+  # mu = 0
+  # sigma = 1
   
-  normal_source_samples = np.random.normal(mu, sigma, num_samples)
-  standard_normal_quantizer = train_quantizer(normal_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
+  # normal_source_samples = np.random.normal(mu, sigma, num_samples)
+  # standard_normal_quantizer = train_quantizer(normal_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
   
-  mean = 0
-  scale = 1 / math.sqrt(2)
+  # mean = 0
+  # scale = 1 / math.sqrt(2)
   
-  laplacian_source_samples = np.random.laplace(mean, scale, num_samples)
-  laplacian_quantizer = train_quantizer(laplacian_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
+  # laplacian_source_samples = np.random.laplace(mean, scale, num_samples)
+  # laplacian_quantizer = train_quantizer(laplacian_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
   
   
   
