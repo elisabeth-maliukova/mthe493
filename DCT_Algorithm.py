@@ -49,23 +49,33 @@ def DCT_transform_image(partitioned_image):
 
   return DCT_transform
 
-# Determine variences of DCT Coefficients
-def get_DCT_variences(DCT_transform):
-  DCT_variences = [[0] * 8 for _ in range(8)]
+# Determine variances of DCT Coefficients
+def get_DCT_variances(DCT_transform):
+  DCT_variances = [[0] * 8 for _ in range(8)]
   
   # Calculate Varience of DC Coefficients
-  DCT_variences[0][0] = np.var(DCT_transform[0][0])
+  DCT_variances[0][0] = np.var(DCT_transform[0][0])
 
   # Calculate Varience (Scale paramater for Laplace Source) of AC Coefficients
   for i in range(1, 8):
     for j in range(1, 8):
       scale_param = np.median(np.abs(DCT_transform[i][j] - np.median(DCT_transform[i][j]))) / 0.6745
-      DCT_variences[i][j] = scale_param 
+      DCT_variances[i][j] = scale_param 
 
-  return DCT_variences     
+  return DCT_variances     
+
+def train_quantizer(source, codebook_lengths, channel_error_probabilities, num_samples):
+  
+  centroids = [0] * len(codebook_lengths)  
+  for channel_error_probability in channel_error_probabilities:
+    for i in range(len(codebook_lengths)):
+      [centroids[i], _, _ ] = general_lloyds_algorithm(source, num_samples, channel_error_probability, codebook_lengths[i])
+      
+  return centroids
 
 def main():
-  channel_error_probability = 0.5
+  channel_error_probabilities = [0.01];
+  codebook_lengths = [1, 2, 4, 8]
   dir = "elephants"
   images = Path(dir).glob('*.jpg')
   training_images = []
@@ -75,13 +85,31 @@ def main():
   translated_image = translate_image(training_images[1])
   partitioned_image = partition_image(translated_image)
   DCT_transform = DCT_transform_image(partitioned_image)
-  DCT_variences = get_DCT_variences(DCT_transform)
+  DCT_variances = get_DCT_variances(DCT_transform)
   
-  # Next Steps --Train laplace and normal quantizers for rates 1-8 (mean 0 and var 1)
+  # print(DCT_variances)
+  num_samples = 10**3
+  
+  mu = 0
+  sigma = 1
+  
+  normal_source_samples = np.random.normal(mu, sigma, num_samples)
+  standard_normal_quantizer = train_quantizer(normal_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
+  
+  mean = 0
+  scale = 1 / math.sqrt(2)
+  
+  laplacian_source_samples = np.random.laplace(mean, scale, num_samples)
+  laplacian_quantizer = train_quantizer(laplacian_source_samples, codebook_lengths, channel_error_probabilities, num_samples)
+  
+  
+  
+  
+  # Next Steps 
   #            --Determine Bit Allocation for each block using Tables in Julians thesis
-  #            --Quantize each block using standard quantizers (adjust using DCT variences)
+  #            --Quantize each block using standard quantizers (adjust using DCT variances)
   #            --Send over Channel
-  #            --Decode Quantizer (adjust using DCT variences)
+  #            --Decode Quantizer (adjust using DCT variances)
   #            --Perform inverse DCT transformation
   #            --add 128 to each pixel value to reverse translation to zero mean source
   #            --rebuild image from blocks

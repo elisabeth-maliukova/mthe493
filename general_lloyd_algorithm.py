@@ -78,7 +78,7 @@ def general_lloyds_algorithm(samples, num_samples, channel_error_probability, co
     centroids = calculate_centroids(bins, codebook_length, channel_error_probability, num_samples)
     distortion.append(calc_distortion_for_all_bins(bins, centroids, codebook_length, num_samples, channel_error_probability))
     print(distortion)
-    if abs(distortion[i] - distortion[i-1]) / distortion[i-1] <= channel_error_probability:
+    if abs(distortion[i] - distortion[i-1]) / distortion[i-1] <= 0.01:
       break
   #returning the last distortion value (final iterated distortion)
   return [centroids, bins, distortion[-1]]
