@@ -11,7 +11,7 @@ from scipy.fftpack import dct, idct
 INVALID_CENTROID = -999999
 
 # temporary table for testing purposes
-#BIT_ALLOCATION_76BPP = [[4, 4, 4, 4, 4, 4, 4, 4]] * 8
+#BIT_ALLOCATION_76BPP = [[4, 4, 4, 4, 4, 0, 0, 0]] * 8
 
 
 BIT_ALLOCATION_76BPP = [[8, 7, 6, 4, 3, 0, 0, 0],
@@ -22,7 +22,6 @@ BIT_ALLOCATION_76BPP = [[8, 7, 6, 4, 3, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0]]
-
                                                 
 BIT_ALLOCATION_58BPP = [[8, 7, 6, 4, 0, 0, 0, 0],
                         [7, 6, 5, 0, 0, 0, 0, 0],
@@ -176,9 +175,12 @@ def decode_coefficients(standard_quantizers, encodeings, rate):
   coefficients_len = len(encodeings)
   decoded_coefficients = np.array([0] * coefficients_len, dtype=np.float64)
 
-  if rate != 0:
-    for i in range(coefficients_len):
+  
+  for i in range(coefficients_len):
+    if rate != 0: 
       decoded_coefficients[i] = standard_quantizers[rate][encodeings[i]]
+    else:
+      decoded_coefficients[i] = 0
 
   return decoded_coefficients
 
