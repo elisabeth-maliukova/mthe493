@@ -78,7 +78,7 @@ def run_lloyds_with_normal_samples_and_BSC_transmission(codebook_lengths, channe
   sample_to_centroid_map = [0] * len(codebook_lengths)
   for channel_error_probability in channel_error_probabilities:
     for i in range(len(codebook_lengths)):
-      [centroids[i], bins[i], distortions[i]] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, epsilon, codebook_lengths[i])
+      [centroids[i], bins[i], distortions[i]] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, codebook_lengths[i], 'bsc', 0)
       # print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
       
       sample_to_centroid_map[i] = simulate_bsc(bins[i], centroids[i], channel_error_probability)

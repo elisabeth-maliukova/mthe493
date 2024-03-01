@@ -1,5 +1,5 @@
 import numpy as np
-from general_lloyd_algorithm import general_lloyds_algorithm, conditional_probability, code_rate
+from general_lloyd_algorithm import general_lloyds_algorithm, conditional_probability_bsc, code_rate
 import matplotlib.pyplot as plt
 from simulate_bsc import simulate_bsc
 import cv2
@@ -24,7 +24,7 @@ def train_quantizer(training_images, codebook_length, channel_error_probabilitie
   training_samples = np.concatenate([image.flatten() for image in training_images])
   num_samples = len(training_samples)
     
-  centroids, bins, _ = general_lloyds_algorithm(training_samples, num_samples, channel_error_probabilities, codebook_length)
+  centroids, bins, _ = general_lloyds_algorithm(training_samples, num_samples, channel_error_probabilities, codebook_length, 'bsc', 0)
   
   return centroids, bins
 
@@ -38,7 +38,7 @@ def test_quantizer(test_image, centroids, channel_error_probability, codebook_le
     for i in range(0, codebook_length):
       new_distortion = 0
       for j in range(0, codebook_length):
-        new_distortion += conditional_probability(i, j, channel_error_probability, code_rate(codebook_length)) * (sample - centroids[j])**2
+        new_distortion += conditional_probability_bsc(i, j, channel_error_probability, code_rate(codebook_length)) * (sample - centroids[j])**2
       if new_distortion < distortion or distortion == -1:
         distortion = new_distortion
         index = i
