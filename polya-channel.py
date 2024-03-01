@@ -24,8 +24,30 @@ def send_through_polya_channel(epsilon, delta, original_bins, centroids):
       
   distorted_pairs = simulate_polya_channel(epsilon, delta, sample_encoding_pairs)
 
+  # Map distorted encodings back to bins, correctly placing individual samples
+  sample_to_centroid_map = []
+  for sample, distorted_encoding in distorted_pairs:
+    bin_number = binary_strings.index(distorted_encoding) if distorted_encoding in binary_strings else None
+    if bin_number is not None:
+      # Associate the sample with the centroid of the bin it has been placed into
+      sample_to_centroid_map.append((sample, centroids[bin_number]))
+    else:
+      # Record that the sample got mapped to an invalid centroid during transmission over channel
+      sample_to_centroid_map.append((0, INVALID_CENTROID))
 
-  return distorted_pairs
+  return sample_to_centroid_map
+
+def calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map, num_samples, sigma):
+  distortion = 0
+  
+  for (sample, centroid) in sample_to_centroid_map:
+    if (sample == 0) and (centroid == INVALID_CENTROID):
+      # if sample got lost during transmission use varience of the source as distortion
+      distortion += sigma
+    else:
+      distortion += (sample - centroid)**2
+      
+  return distortion / num_samples
       
   
 def get_transition_prob(prev_state, epsilon, delta):
@@ -65,22 +87,38 @@ def run_lloyds_with_normal_samples_and_polya_transmission(codebook_lengths, chan
   centroids = [0] * len(codebook_lengths)
   bins = [0] * len(codebook_lengths)
   
-  distorted_pairs = [0] * len(codebook_lengths)
+  fig1, ax1 = plt.subplots()
+  ax1.set_xlabel('Codebook Size (n)')
+  ax1.set_ylabel('Distortion')
+  ax1.set_title('Distortion for n-length Codebook before Transmission (Normal)')
   
+  fig2, ax2 = plt.subplots()
+  ax2.set_xlabel('Codebook Size (n)')
+  ax2.set_ylabel('Distortion')
+  ax2.set_title('Distortion for n-length Codebook after Transmission (Normal)')
+  
+  new_distortions = [0] * len(codebook_lengths)
   sample_to_centroid_map = [0] * len(codebook_lengths)
-  
   for channel_error_probability in channel_error_probabilities:
     for i in range(len(codebook_lengths)):
-      [centroids[i], bins[i], distortions[i]] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, codebook_lengths[i])
+      [centroids[i], bins[i], distortions[i]] = general_lloyds_algorithm(normal_source_samples, num_samples, channel_error_probability, codebook_lengths[i], 'polya', delta)
+      # print('OLD DISTORTION: ', 'codebook length=', codebook_lengths[i], 'old distortions=', distortions, 'channel error prob=', channel_error_probability)
       
-      distorted_pairs[i] = send_through_polya_channel(channel_error_probability, delta, bins[i], centroids[i])
+      sample_to_centroid_map[i] = send_through_polya_channel(channel_error_probability, delta, bins[i], centroids[i])
+      new_distortions[i] = calc_distortion_between_centroids_and_transmitted_samples(sample_to_centroid_map[i], num_samples, sigma)
+      # print('NEW DISTORTION: ', 'codebook length=', codebook_lengths[i], 'new distortions=', new_distortions, 'channel error prob=', channel_error_probability)
+      
+    ax1.plot(codebook_lengths, distortions)
+    ax2.plot(codebook_lengths, new_distortions)
+    
+  plt.show()
 
   return centroids, bins, distortions
 
 def main():
   channel_error_probabilities = [0, 0.01, 0.1, 0.5]
   codebook_lengths = [1, 2, 4, 8]
-  num_samples = 50
+  num_samples = 1000
   run_lloyds_with_normal_samples_and_polya_transmission(codebook_lengths, channel_error_probabilities, num_samples)
 
 if __name__ == "__main__":
