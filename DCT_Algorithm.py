@@ -11,17 +11,17 @@ from scipy.fftpack import dct, idct
 INVALID_CENTROID = -999999
 
 # temporary table for testing purposes
-#BIT_ALLOCATION_76BPP = [[4, 4, 4, 4, 4, 0, 0, 0]] * 8
+BIT_ALLOCATION_76BPP = [[4, 4, 4, 4, 4, 0, 0, 0]] * 8
 
 
-BIT_ALLOCATION_76BPP = [[8, 7, 6, 4, 3, 0, 0, 0],
-                        [7, 6, 5, 4, 0, 0, 0, 0],
-                        [6, 5, 4, 0, 0, 0, 0, 0],
-                        [4, 4, 0, 0, 0, 0, 0, 0],
-                        [3, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 0, 0, 0, 0, 0, 0]]
+# BIT_ALLOCATION_76BPP = [[8, 7, 6, 4, 3, 0, 0, 0],
+#                         [7, 6, 5, 4, 0, 0, 0, 0],
+#                         [6, 5, 4, 0, 0, 0, 0, 0],
+#                         [4, 4, 0, 0, 0, 0, 0, 0],
+#                         [3, 0, 0, 0, 0, 0, 0, 0],
+#                         [0, 0, 0, 0, 0, 0, 0, 0],
+#                         [0, 0, 0, 0, 0, 0, 0, 0],
+#                         [0, 0, 0, 0, 0, 0, 0, 0]]
                                                 
 BIT_ALLOCATION_58BPP = [[8, 7, 6, 4, 0, 0, 0, 0],
                         [7, 6, 5, 0, 0, 0, 0, 0],
@@ -40,6 +40,9 @@ BIT_ALLOCATION_24BPP = [[8, 8, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 0, 0, 0, 0, 0, 0]]
+
+def mod2_addition(a, b):
+    return (a + b) % 2
 
 # Shifts image pixel values to obtain a zero mean source
 def translate_image(test_image, shift):
@@ -118,7 +121,7 @@ def get_DCT_variances(DCT_transform):
   # Calculate Varience Coefficients
   for i in range(8):
     for j in range(8):
-      DCT_variances[i][j] = statistics.variance(DCT_transform[i][j])
+      DCT_variances[i][j] = np.var(DCT_transform[i][j])
   return DCT_variances     
 
 # Determine the ac quantizer rates
@@ -147,7 +150,7 @@ def train_quantizers(source, code_rates, channel_error_probability, num_samples)
     if i in code_rates:
       print("starting rate", i)
       codebook_length = 2**i
-      [quantizers[i], _, _ ] = general_lloyds_algorithm(source, num_samples, channel_error_probability, codebook_length)
+      [quantizers[i], _, _ ] = general_lloyds_algorithm(source, num_samples, channel_error_probability, codebook_length, 'bsc', 0)
   print("Finished quantizer training")      
   return quantizers
 
@@ -223,7 +226,7 @@ def decode_DCT_transform(transmitted_values, standard_normal_quantizers, standar
   return decoded_values 
 
 
-def flip_bits_with_probability(number, epsilon, rate):
+def send_through_bsc_channel(number, epsilon, rate):
     # Convert the integer to binary representation
     binary_representation = bin(number)[2:].zfill(rate)
 
@@ -236,9 +239,36 @@ def flip_bits_with_probability(number, epsilon, rate):
     # Convert the flipped binary back to an integer
     flipped_number = int(flipped_binary, 2)
 
-    return flipped_number      
+    return flipped_number  
+  
+def get_polya_transition_prob(prev_state, epsilon, delta):
+  return (epsilon + (prev_state * delta)) / (1 + delta)    
+  
+def send_through_polya_channel(encoding, epsilon, delta, rate):
+  # Convert the integer to binary representation
+  binary_representation = bin(encoding)[2:].zfill(rate)
+  
+  distorted_encoding = [0] * len(binary_representation)
+  z_process = [0] * len(binary_representation)
+  z_process[0] = 1 if (np.random.rand() < epsilon) else 0
+  
+  for index, bit in enumerate(binary_representation):
+    if (index == 0):
+      distorted_encoding[0] = mod2_addition(int(bit), z_process[0])
+    else:
+      z_process[index] = 1 if np.random.rand() < get_polya_transition_prob(z_process[index - 1], epsilon, delta) else 0
+      distorted_encoding[index] = mod2_addition(int(bit), z_process[index])
+      
+    distorted_encoding[index] = str(distorted_encoding[index])
+  
+  flipped_binary_string = ''.join(distorted_encoding)
+  flipped_number = int(flipped_binary_string, 2)
+  
+  return flipped_number
+  
+  
 
-def simulate_channel(encoded_values, error_probability):
+def simulate_channel(encoded_values, error_probability, channel, delta):
   num_blocks = len(encoded_values[0][0])
   sent_values = np.array([[[0] * num_blocks] * 8 for _ in range(8)]) 
   for i in range(8):
@@ -246,7 +276,10 @@ def simulate_channel(encoded_values, error_probability):
       rate = BIT_ALLOCATION_76BPP[i][j]
       if rate != 0:
         for k in range(len(encoded_values[i][j])):
-          sent_values[i][j][k] = flip_bits_with_probability(encoded_values[i][j][k], error_probability, rate)
+          if (channel == 'bsc'):
+            sent_values[i][j][k] = send_through_bsc_channel(encoded_values[i][j][k], error_probability, rate)
+          elif (channel == 'polya'):
+            sent_values[i][j][k] = send_through_polya_channel(encoded_values[i][j][k], error_probability, delta, rate)
   
   return sent_values      
 
@@ -269,6 +302,11 @@ def create_quantizers(channel_error_probabilities):
   return [standard_normal_quantizers, standard_laplace_quantizers]  
 
 def main():
+  
+  # ************************ PICK YOUR CHANNEL TYPE HERE **************************
+  # channel_type = 'bsc'
+  channel_type = 'polya'
+  
   dir = "elephants"
   images = Path(dir).glob('*.jpg')
   training_images = []
@@ -276,6 +314,7 @@ def main():
     training_images.append(cv2.resize(cv2.imread(str(dir+"/"+image.name), cv2.IMREAD_GRAYSCALE),(256, 256)))
 
   channel_error_probabilities = 0.01
+  delta = 0.4
   [standard_normal_quantizer, standard_laplace_quantizers] = create_quantizers(channel_error_probabilities) 
 
   translated_image = translate_image(training_images[1], -128)
@@ -284,7 +323,7 @@ def main():
   DCT_variances = get_DCT_variances(DCT_transform)
   
   encoded_DCT_transform = encode_DCT_transform(standard_normal_quantizer, standard_laplace_quantizers, DCT_transform, DCT_variances)
-  transmitted_DCT_transfrom = simulate_channel(encoded_DCT_transform, channel_error_probabilities)
+  transmitted_DCT_transfrom = simulate_channel(encoded_DCT_transform, channel_error_probabilities, channel_type, delta)
   decoded_DCT_transform = decode_DCT_transform(transmitted_DCT_transfrom, standard_normal_quantizer, standard_laplace_quantizers, DCT_variances)
 
 
