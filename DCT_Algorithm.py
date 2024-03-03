@@ -142,7 +142,7 @@ def get_DC_coefficent_rates():
   return [bit_allocation_map[0][0]]
 
 # train quantizers using optmial bit allocation rates
-def train_quantizers(source, code_rates, channel_error_probability, num_samples):
+def train_quantizers(source, code_rates, channel_error_probability, num_samples, channel_type, delta):
   quantizers = [[0], [0], [0], [0], [0], [0], [0], [0], [0]]
 
   print("Starting quantizer training")
@@ -150,7 +150,7 @@ def train_quantizers(source, code_rates, channel_error_probability, num_samples)
     if i in code_rates:
       print("starting rate", i)
       codebook_length = 2**i
-      [quantizers[i], _, _ ] = general_lloyds_algorithm(source, num_samples, channel_error_probability, codebook_length, 'bsc', 0)
+      [quantizers[i], _, _ ] = general_lloyds_algorithm(source, num_samples, channel_error_probability, codebook_length, channel_type, delta)
   print("Finished quantizer training")      
   return quantizers
 
@@ -283,7 +283,7 @@ def simulate_channel(encoded_values, error_probability, channel, delta):
   
   return sent_values      
 
-def create_quantizers(channel_error_probabilities):
+def create_quantizers(channel_error_probabilities, channel_type, delta):
   num_samples = 10**3
   mean = 0
   variance = 1
@@ -296,8 +296,8 @@ def create_quantizers(channel_error_probabilities):
   AC_coefficent_rates = get_AC_coefficent_rates()
   
   # Train Quantizers for laplace and normal sources
-  standard_normal_quantizers = train_quantizers(normal_source_samples, DC_coefficent_rate, channel_error_probabilities, num_samples)
-  standard_laplace_quantizers = train_quantizers(laplacian_source_samples, AC_coefficent_rates, channel_error_probabilities, num_samples)
+  standard_normal_quantizers = train_quantizers(normal_source_samples, DC_coefficent_rate, channel_error_probabilities, num_samples, channel_type, delta)
+  standard_laplace_quantizers = train_quantizers(laplacian_source_samples, AC_coefficent_rates, channel_error_probabilities, num_samples, channel_type, delta)
 
   return [standard_normal_quantizers, standard_laplace_quantizers]  
 
@@ -315,7 +315,7 @@ def main():
 
   channel_error_probabilities = 0.01
   delta = 0.4
-  [standard_normal_quantizer, standard_laplace_quantizers] = create_quantizers(channel_error_probabilities) 
+  [standard_normal_quantizer, standard_laplace_quantizers] = create_quantizers(channel_error_probabilities, channel_type, delta) 
 
   translated_image = translate_image(training_images[1], -128)
   partitioned_image = partition_image(translated_image)
