@@ -1,0 +1,34 @@
+**WHAT WE HAVE DONE**
+-> Implementation of the DCT algorithm
+  - Quantizers are successfully being trained for encoding and decoding the DCT transform
+  - Using the the optimal bit allocation matrices for B = 76 bits
+  - Keaton also simulated the BSC and the images look to be re-constructing properly
+  - Rob also added the polya channel simulation to this algorithm
+
+-> General Lloyd's algorithm that accounts for BSC or Polya channel error
+  - Rob added the polya channel conditional probabilities
+  - The test to see if the algorithm and if we are simulating the polya channel properly is in
+    the polya-channel.py file. We train the quantizer using the polya channel and then send the
+    codebook through the polya channel and compare the distortions. They seem to match up.
+  - We may need more testing, but things are looking good there
+  - Rob would still like other eyes on the polya channel implementation to see if he missed anything
+
+**WHAT WE NEED TO MODIFY IN OUR IMPLEMENTATION**
+-> We only use 1000 samples to train the quantizers in the DCT algorithm. This is too little
+  - If we increase the number of samples, the algorithm will take way too long.
+  - We need to port the general_lloyd_algorithm(...) function to C that Liam/Matthew have been working on.
+  - We may need to leverage the CPUs of the supercomputer and see if that speeds anything up.
+
+-> We need relevant images
+  - We need grayscale images that better reflect our application.
+  - Can somebody look into potential image candidates that we can use?
+  
+-> We need to add timing tests for thesis 
+  - We should probably modify the algorithms to include timings for each of the iterations
+  - There are probably things Linder will ask for that we need to be prepared to add in terms of testing
+    and showing things like graphs or other timings for the thesis
+
+**LOOKING AHEAD TO THESIS**
+-> We need to start drafting out a plan for the report
+  - We should set up a meeting this week and start designing the report / designating areas for people to work on
+
