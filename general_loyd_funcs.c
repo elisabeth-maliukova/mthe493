@@ -76,9 +76,9 @@ int find_centroid_index_of_sample_using_lin(double sample, int codebook_length, 
             new_distortion = calculate_expected_distortion_of_sample(sample, index, centroids, codebook_length, ham_dist_to_cond_probs);
             if (new_distortion < min_distortion) {
                 min_distortion = new_distortion;
-                min_index--
+                min_index--;
             } else {
-                return min_index
+                return min_index;
             }
         }
     } else {
@@ -87,37 +87,37 @@ int find_centroid_index_of_sample_using_lin(double sample, int codebook_length, 
             new_distortion = calculate_expected_distortion_of_sample(sample, index, centroids, codebook_length, ham_dist_to_cond_probs);
             if (new_distortion < max_distortion) {
                 max_distortion = new_distortion;
-                max_index++
+                max_index++;
             } else {
-                return max_index
+                return max_index;
             }
         }
     }
 }
 
 int find_centroid_index_of_sample_using_binary_search(double sample, int codebook_length, double centroids[], int min_index, int max_index, double ham_dist_to_cond_probs[]) {
-    double distrotion_of_max_centroid, distortion_of_min_centroid;
+    double distortion_of_max_centroid, distortion_of_min_centroid;
     distortion_of_min_centroid = calculate_expected_distortion_of_sample(sample, min_index, centroids, codebook_length, ham_dist_to_cond_probs);
-    distrotion_of_max_centroid = calculate_expected_distortion_of_sample(sample, max_index, centroids, codebook_length, ham_dist_to_cond_probs);
+    distortion_of_max_centroid = calculate_expected_distortion_of_sample(sample, max_index, centroids, codebook_length, ham_dist_to_cond_probs);
 
-    int min_index_smaller = (distortion_of_min_centroid < distrotion_of_max_centroid);
+    int min_index_smaller = (distortion_of_min_centroid < distortion_of_max_centroid);
 
     if (max_index - min_index == 1) {
         if (min_index_smaller) {
             if (min_index == 0){
                 return min_index;
-            } else if (calculate_expected_distortion_of_sample(sample, min_index - 1, centroids, codebook_length, calculate_hamming_distance) > distortion_of_min_centroid) {
+            } else if (calculate_expected_distortion_of_sample(sample, min_index - 1, centroids, codebook_length, ham_dist_to_cond_probs) > distortion_of_min_centroid) {
                 return min_index;
             } else{
-                return find_centroid_index_of_sample_using_lin(sample, codebook_length, centroids, min_index - 1, 0);
+                return find_centroid_index_of_sample_using_lin(sample, codebook_length, centroids, min_index - 1, 0, ham_dist_to_cond_probs);
             }
         } else {
             if (max_index == codebook_length - 1){
                 return max_index;
-            } else if (calculate_expected_distortion_of_sample(sample, max_index + 1, centroids, codebook_length, calculate_hamming_distance) > distortion_of_max_centroid) {
+            } else if (calculate_expected_distortion_of_sample(sample, max_index + 1, centroids, codebook_length, ham_dist_to_cond_probs) > distortion_of_max_centroid) {
                 return max_index;
             } else{
-                return find_centroid_index_of_sample_using_lin(sample, codebook_length, centroids, max_index + 1, 1);
+                return find_centroid_index_of_sample_using_lin(sample, codebook_length, centroids, max_index + 1, 1, ham_dist_to_cond_probs);
             }
         }
     }
@@ -158,7 +158,6 @@ void assign_samples_to_bin(int num_samples, double samples[], double centroids[]
 void calculate_centroids(double centroids[], int codebook_length, double * bins[], int samples_per_bin[], double ham_dist_to_cond_probs[]) {
     double sum;
     int sum_samples_per_bin[codebook_length];
-    int sum;
     for (int bin = 0; bin < codebook_length; bin++) {
         sum = 0;
         for (int sample = 0; sample < samples_per_bin[bin]; sample++) {
@@ -181,18 +180,18 @@ void calculate_centroids(double centroids[], int codebook_length, double * bins[
 
 void lloyds_algorithm(double samples[], int num_samples, double * bins[], double centroids[], double distortion[], double channel_error, double epsilon, int codebook_length) {
     int len_distotion = 100;
-    distortion[] = (double *)calloc(len_distotion, sizeof(double));
+    distortion = (double *)calloc(len_distotion, sizeof(double));
     
     double initial_delta = 2 / (codebook_length - 1);
     for (int i = 0; i < codebook_length; i++) {
         centroids[i] = i * initial_delta - 1;
     }
     
-    double code_rate = calc_code_rate(codebook_length);
+    int code_rate = calc_code_rate(codebook_length);
     double hamm_dist_to_cond_prob_map[code_rate + 1];
     create_conditional_prob_arr(hamm_dist_to_cond_prob_map, channel_error, code_rate);
 
-    int samples_per_bin;
+    int samples_per_bin[codebook_length];
     for (int bin = 0; bin < codebook_length; bin++) {
         bins[bin] = (double *)calloc(1, sizeof(double));
     }

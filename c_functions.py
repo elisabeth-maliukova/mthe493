@@ -1,2 +1,4 @@
-from ctypes import CDLL
+import ctypes as c
+
+
 
